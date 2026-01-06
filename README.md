@@ -58,7 +58,7 @@ cd DynaPIN
 ### 2. Create the Environment
 This command installs all necessary dependencies
 ```bash
-conda env create -f environments.yml
+conda env create -f environment.yml
 conda activate dynapin
 ```
 DynaPIN is ready to use!
