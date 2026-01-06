@@ -1,6 +1,6 @@
 # DynaPIN: Dynamic Analysis of Protein INterfaces
 
-![Version](https://img.shields.io/badge/version-0.1.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.1.1-blue?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square)
 ![License](https://img.shields.io/badge/license-Apache%202.0-green?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey?style=flat-square)
@@ -71,10 +71,10 @@ Run a complete analysis pipeline (Quality Control, ResidueBased, and Interaction
 
 ```bash
 # Using a PDB trajectory
-dynapin --job_name=TestRun --trajectory_file=sim.pdb --commands=all_analysis
+dynapin --output_dir=TestRun --trajectory_file=sim.pdb --commands=all_analysis
 
 # Using a DCD trajectory with topology
-dynapin --job_name=TestRun --trajectory_file=sim.dcd --topology_file=top.psf --stride=10 --commands=all_analysis
+dynapin --output_dir=TestRun --trajectory_file=sim.dcd --topology_file=top.psf --stride=10 --commands=all_analysis
 ```
 
 ### Key Arguments
@@ -96,7 +96,7 @@ DynaPIN organizes the analysis outputs into a structured directory as shown belo
 *(Note: `*.png` indicates multiple plot files generated for different metrics)*
 
 ```text
-Job_Name/
+output_dir/
 │
 ├── figures/                         # Visualization Plots
 │   ├── int_pairwise_*.png           # Interaction frequency plots (H-bond, Hydrophobic, Ionic)
