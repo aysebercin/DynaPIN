@@ -1,0 +1,27 @@
+name: dynapin
+channels:
+  - salilab
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - setuptools
+  - wheel
+  - ipykernel
+  - jupyter
+  - dockq
+  - salilab::dssp
+  - ipywidgets
+  - matplotlib
+  - seaborn
+  - moviepy
+  - jsonpickle
+  - python-kaleido
+  - mdanalysis
+  - pdbfixer
+  - pdb-tools
+  - freesasa
+  - nglview=3.1.4
+  - pip:
+      - -e ./interfacea
+      - -e .
