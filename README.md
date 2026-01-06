@@ -13,19 +13,19 @@ Whether you are running a quick quality check or a deep-dive interface analysis,
 
 DynaPIN performs analysis in three distinct yet integrated modules:
 
-### 1. 🔍 Quality Control
+### 1. Quality Control
 Assess the stability and reliability of your simulation.
 * **Structural Metrics:** Root Mean Square Deviation (RMSD), Radius of Gyration (RG), Root Mean Square Fluctuation (RMSF).
 * **Interface Quality with CAPRI Metrics:** Interface RMSD (iRMSD), Ligand RMSD (lRMSD), DockQ Score, Fraction of Native (Fnat) and Non-Native (Fnonnat) contacts.
 
-### 2. 🧬 Residue Based Analysis
+### 2. Residue Based Analysis
 Characterize the physicochemical evolution of interface residues.
 * **Dynamic Classification:** Categorizes residues as Core, Rim, Support, Surface, or Interior based on the Levy (2010) model.
 * **Surface Analysis:** Relative and Absolute Solvent Accessible Surface Area of complex and monomers (rASA/SASA).
 * **Energetics:** Decomposition of binding energy (Van der Waals, Electrostatic) per residue using **FoldX**.
 * **Secondary Structure:** Dynamic monitoring of structural changes at interface.
 
-### 3. 🔗 Interaction Based Analysis
+### 3. Interaction Based Analysis
 Map the specific atomic interaction networks over time.
 * **Bond Tracking:** Detects Hydrogen bonds, Hydrophobic interactions, and Salt bridges (Ionic bonds).
 
