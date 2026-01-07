@@ -71,10 +71,10 @@ Run a complete analysis pipeline (Quality Control, ResidueBased, and Interaction
 
 ```bash
 # Using a PDB trajectory
-dynapin --output_dir=TestRun --trajectory_file=sim.pdb --commands=all_analysis
+dynapin --output_dir=TestRun --trajectory_file=sim.pdb --commands=all_analysis,all_plots
 
 # Using a DCD trajectory with topology
-dynapin --output_dir=TestRun --trajectory_file=sim.dcd --topology_file=top.psf --stride=10 --commands=all_analysis
+dynapin --output_dir=TestRun --trajectory_file=sim.dcd --topology_file=top.psf --stride=10 --commands=all_analysis,all_plots
 ```
 
 ### Key Arguments
