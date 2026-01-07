@@ -1,6 +1,5 @@
 name: dynapin
 channels:
-  - salilab
   - conda-forge
 dependencies:
   - python=3.10
@@ -10,7 +9,7 @@ dependencies:
   - ipykernel
   - jupyter
   - dockq
-  - salilab::dssp
+  - dssp=3.1.4
   - ipywidgets
   - matplotlib
   - seaborn
