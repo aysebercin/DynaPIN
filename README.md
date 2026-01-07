@@ -88,7 +88,6 @@ dynapin --output_dir=TestRun --trajectory_file=sim.dcd --topology_file=top.psf -
 | `--foldx_path` | Path to the FoldX executable (required for energy analysis). |
 | `-sm`, `--split_models` | Splits multi-model PDBs into separate frames (default: True). |
 
----
 
 ## 📂 Output Files
 
@@ -116,15 +115,11 @@ output_dir/
 └── table_params.json                # Configuration used for calculations
 ```
 
----
-
 ## 🛠 External Dependencies
 
 While the conda environment handles most libraries, please note:
 
 **FoldX:** Due to licensing, FoldX cannot be auto-installed. Download it from [FoldX Suite](https://foldxsuite.crg.eu/) and provide the path via `--foldx_path`.
-
----
 
 ## 📜 Acknowledgements & Funding
 
