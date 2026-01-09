@@ -98,7 +98,7 @@ Beyond the command line, DynaPIN serves as a powerful Python library. We provide
 To run the workflow interactively:
 
 ```bash
-conda activate dynapin_env
+conda activate dynapin
 jupyter notebook DynaPIN_API_Workflow.ipynb
 ```
 
