@@ -1,6 +1,6 @@
 # DynaPIN: Dynamic Analysis of Protein INterfaces
 
-![Version](https://img.shields.io/badge/version-0.1.1-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.1.2-blue?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square)
 ![License](https://img.shields.io/badge/license-Apache%202.0-green?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey?style=flat-square)
@@ -64,9 +64,9 @@ conda activate dynapin
 DynaPIN is ready to use!
 
 ## ⚡ Quick Start
-DynaPIN provides a user-friendly Command Line Interface (CLI). 
+DynaPIN offers two primary ways to run analyses: via the **Command Line Interface (CLI)** for standard pipelines, or through the **Python API** for interactive exploration. 
 
-### Basic Usage
+### Option 1: Command Line Interface (CLI)
 Run a complete analysis pipeline (Quality Control, ResidueBased, and InteractionBased modules) with a single command:
 
 ```bash
@@ -76,18 +76,31 @@ dynapin --output_dir=TestRun --trajectory_file=sim.pdb --commands=all_analysis,a
 # Using a DCD trajectory with topology
 dynapin --output_dir=TestRun --trajectory_file=sim.dcd --topology_file=top.psf --stride=10 --commands=all_analysis,all_plots
 ```
-
 ### Key Arguments
 
 | Argument | Description |
 | :--- | :--- |
+| `-o`, `--output_dir` | Name of the output directory where results will be saved. |
 | `-t`, `--trajectory_file` | Path to the input trajectory (`.dcd` or `.pdb`). |
 | `--topology_file` | Topology file (`.psf`, `.pdb`) required for `.dcd` inputs. |
 | `-c`, `--commands` | Modules to run (e.g., `QualityControl`, `ResidueBased`, `all_analysis`). |
 | `-s`, `--stride` | Step size for reading frames (default: 1). |
+| `-ch`, `--chains` | Select specific chains for analysis in heteromers (e.g., `'A,B'`). |
 | `--foldx_path` | Path to the FoldX executable (required for energy analysis). |
 | `-sm`, `--split_models` | Splits multi-model PDBs into separate frames (default: True). |
 
+### Option 2: Interactive API Workflow
+Beyond the command line, DynaPIN serves as a powerful Python library. We provide a comprehensive Jupyter Notebook that demonstrates this usage, allowing for inline 3D visualization and granular control over every analysis step.
+
+* **File:** [`DynaPIN_API_Workflow.ipynb`](DynaPIN_API_Workflow.ipynb)
+* **Use Case:** Ideal for users who prefer an interactive environment (Jupyter/Lab) or wish to integrate DynaPIN into custom Python scripts.
+
+To run the workflow interactively:
+
+```bash
+conda activate dynapin_env
+jupyter notebook DynaPIN_API_Workflow.ipynb
+```
 
 ## 📂 Output Files
 
