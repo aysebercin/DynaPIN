@@ -208,7 +208,7 @@ class Plotter:
         ax.set_xlabel(time_name)
         ax.set_ylabel(f'$R_g$ (Å)')
 
-        ax.set_title(f"Dynamic Variation of Radius of Gyration ($R_g$)")
+        ax.set_title(f"Time Evolution of Radius of Gyration ($R_g$)")
         self._place_axis_legend(ax)
         fig.savefig(os.path.join(self.target_path, f'qc_rg_complex.png'), dpi=300, bbox_inches='tight')
 
@@ -294,12 +294,12 @@ class Plotter:
             ax.set_title(f"Chain {chain_name}")
 
         axes[0].set_ylabel("RMSF (Å)")
-        plt.suptitle("Residue-wise backbone Root Mean Square Fluctuation (RMSF)")
+        plt.suptitle("Residue-based backbone Root Mean Square Fluctuation (RMSF)")
         
         if any_interface_markers:
             legend_ax = axes[1] if n_groups > 1 else axes[0]
             interface_handle = Line2D([], [], color='red', marker='o', linestyle='None',
-                                      markersize=5, label='Interface Residues')
+                                      markersize=5, label='Dynamic Interface Residues')
             legend_ax.legend(handles=[interface_handle], loc='upper right')
 
         fig.savefig(os.path.join(self.target_path, 'qc_rmsf_backbone.png'), dpi=300, bbox_inches='tight')
@@ -384,7 +384,7 @@ class Plotter:
         ax.set_ylim(bottom=0)
 
 
-        ax.set_title('Ligand RMSD ($l$-RMSD) Displacement Profile')
+        ax.set_title('Time Evolution of Ligand Displacement Profile ($l$-RMSD)')
         self._place_axis_legend(ax, title="Mapping")
         fig.savefig(os.path.join(self.target_path, f'qc_lrmsd_ligand.png'), dpi=300, bbox_inches='tight')
 
@@ -530,9 +530,9 @@ class Plotter:
         self._biophys_path = path
 
         def _calc_biophys_type(res_type):
-            res_dict = {"GLY": 'Hydrophobic', "ALA": 'Hydrophobic', "PRO": 'Hydrophobic', "VAL": 'Hydrophobic',
-                        "LEU": 'Hydrophobic', "ILE": 'Hydrophobic', "MET": 'Hydrophobic', "TRP": 'Hydrophobic',
-                        "PHE": 'Hydrophobic',
+            res_dict = {"GLY": 'hydrophobic', "ALA": 'hydrophobic', "PRO": 'hydrophobic', "VAL": 'hydrophobic',
+                        "LEU": 'hydrophobic', "ILE": 'hydrophobic', "MET": 'hydrophobic', "TRP": 'hydrophobic',
+                        "PHE": 'hydrophobic',
                         "SER": 'polar',
                         "THR": 'polar', "TYR": 'polar', "ASN": 'polar', "GLN": 'polar', "CYS": 'polar',
                         "LYS": '+ly charged', "ARG": '+ly charged', "HIS": '+ly charged', "ASP": '-ly charged',
@@ -578,10 +578,10 @@ class Plotter:
             if ax.get_xticklabels()[ind].get_text() in l:
                 plt.setp(ax.get_xticklabels()[ind], weight='bold')
 
-        plt.ylabel("Percentage of Total Residue Types")
+        plt.ylabel("Occurance Rate of Residue Types (%)")
         plt.xlabel("Interface Label")
 
-        plt.title("Physicochemical Composition of Interface Layers")
+        plt.title("Physicochemical Composition of Interface Layers (Levy, 2010)")
         self._place_axis_legend(ax, title="Biophysical Type", bbox=(1.02, 1), loc='upper left')
         fig.savefig(os.path.join(self.target_path, f'res_biophys_composition.png'), dpi=300, bbox_inches='tight')
 
@@ -680,7 +680,7 @@ class Plotter:
             ax.set_title(f"Chain {chain[0][0]}")
             ax.get_legend().remove()
 
-        plt.suptitle("Secondary Structure Stability at the Protein Interface")
+        plt.suptitle("Secondary Structure Profile of Interface Residues")
         legend_handles = []
         legend_labels = []
         for code, label in mylabels.items():
@@ -741,9 +741,9 @@ class Plotter:
         ax.plot(plot_df[time_name].unique() ,sums, color=self.complex_color, label="Complex")
          
         ax.set_xlabel(time_name)
-        ax.set_ylabel(f'Interface Area (Å^2)')
+        ax.set_ylabel(f'Interface Area (Å²)')
 
-        ax.set_title(f"Dynamic Evolution of Solvent Accessible Surface Area of Protein Interface")
+        ax.set_title(f"Time Evolution of Solvent Accessible Surface Area of Interface")
         self._place_axis_legend(ax, title="Chains")
         fig.savefig(os.path.join(self.target_path, f'res_sasa_interface.png'), dpi=300, bbox_inches='tight')
 
@@ -777,23 +777,22 @@ class Plotter:
 
         if not self._bar_palette:
             self._bar_palette = [
-                            # 1) H-bonds → blue tones
-                            ["#C8D9F6",  # light  – bb–bb
-                            "#8BAEF4",  # medium – bb–sc / sc–bb
-                            "#2666CD"], # darker – sc–sc
+                            # 1) H-bonds
+                            ["#A2C9EF",  # light  – bb–bb
+                            "#5286BA",  # medium – bb–sc / sc–bb
+                            "#1C3D5E"], # darker – sc–sc
 
-                            # 2) Hydrophobic → yellow / golden tones
-                            ["#F8E99C",  # light  – bb–bb
-                            "#F3C744",  # medium – bb–sc / sc–bb
-                            "#F2A50A"], # darker – sc–sc
+                            # 2) Hydrophobic
+                            ["#ACF4E8",  # light  – bb–bb
+                            "#70C3B4",  # medium – bb–sc / sc–bb
+                            "#348D8C"], # darker – sc–sc
 
-                            # 3) Ionic → salmon / coral tones
-                            ["#FFD5C7",  # light  – bb–bb
-                            "#ECA393",  # medium – bb–sc / sc–bb
-                            "#DD5C5C"], # darker – sc–sc
+                            # 3) Ionic
+                            ["#F3ABCF",  # light  – bb–bb
+                            "#CC6677",  # medium – bb–sc / sc–bb
+                            "#882255"], # darker – sc–sc
                         ]
-
-       
+                             
         backbones = {"HN", "N", "CA", "HA", "C", "O"}
 
         for x,palet in zip(df.groups, self._bar_palette):
@@ -872,7 +871,7 @@ class Plotter:
 
             plt.title(f"Frequency of Intermolecular {full_name} across simulation")
 
-            outfile = os.path.join(self.target_path, f"int_pairwise_{x}-frequency.png")
+            outfile = os.path.join(self.target_path, f"int_pairwise_{x}_frequency.png")
             plt.savefig(outfile, dpi=300, bbox_inches='tight', format="png")
             plt.close(fig)
 
@@ -936,6 +935,13 @@ class Plotter:
             fig, ax = plt.subplots(figsize=(15, 8))
             sns.boxplot(data=plot_data, x="Residue", y=col, hue="Chain", palette=my_palette)
             plt.xticks(rotation=90)
+            energy_units = {
+                "Van der Waals Energy": "kcal/mol",
+                "Electrostatic Energy": "kcal/mol",
+                "Total Residue Energy": "a.u",
+            }
+            if col in energy_units:
+                ax.set_ylabel(f"{col} ({energy_units[col]})")
             plt.title(f"Distribution of Interface Residue Energies: {col} ")
             self._place_axis_legend(ax, title="Chain", bbox=(1.02, 1), loc='upper left')
             fname = col.lower().replace(" ", "_")

@@ -10,7 +10,7 @@ import interfacea as ia
 from openmm import app
 import numpy as np
 import DynaPIN.handling as hp
-import DynaPIN.pdb_tool_modified as ptm
+import DynaPIN.pdb_fixer as ptm
 import random
 import json
 import subprocess
@@ -27,7 +27,8 @@ handler = hp.tables_errors()
 
 
 class dynapin:
-    def __init__(self, trajectory_file, stride=1, split_models=True, chains=None, output_dir=None, topology_file=None, show_time_as="Frame", timestep=None, time_unit=None, remove_water=True, remove_ions=True):
+    def __init__(self, trajectory_file, stride=1, split_models=True, chains=None, output_dir=None, topology_file=None 
+                 ):
         """A class to perform Quality Control, Residue Based and Interaction Based analyses on MD simulations. Results of the analyses are printed as .csv files under a folder named 'tables'. MD outputs with any exception are transformed to .pdb file and the analyses are run through this .pdb file. Number of frames that will be fetched from initial input file to be analysed can be set by stride value.
         
         Keyword arguments:
@@ -68,15 +69,7 @@ class dynapin:
         handler.test_stride(stride)
         handler.test_split_models(split_models)
 
-
-        if timestep is None:
-            self.timestep = 1.0
-        else:
-            self.timestep = timestep
-
         #params
-        self.time_Type = show_time_as
-        self.time_unit = time_unit
         self.trajectory_file_ = os.path.abspath(trajectory_file)
         self.split_models_ = split_models
         self.chains_ = chains
@@ -89,8 +82,6 @@ class dynapin:
         self.get_all_hph = None
         self.foldx_path = None
         self.dssp_flag = False
-        self.remove_water = remove_water
-        self.remove_ions = remove_ions
 
         def _normalize_chains(chains):
             if isinstance(chains, str):
@@ -122,27 +113,21 @@ class dynapin:
         file_ext = os.path.splitext(self.trajectory_file_)[1].lstrip('.')
 
 
-        if file_ext in ('dcd', 'xtc'):
+        if file_ext in ('dcd', 'xtc', 'trr'):
             name = file_name.split("\\")[-1].split(".")[0]
             out_file = os.path.join(self.job_path, f"{name}.pdb")
             if not self.topology_file:
                 if file_ext == 'dcd':
                     topo_prompt = 'Please provide topology file (.psf or .pdb) for the trajectory:\n'
                 else:
-                    topo_prompt = 'Please provide topology file (.gro or .pdb) for the trajectory:\n'
+                    topo_prompt = 'Please provide topology file (.tpr or .pdb) for the trajectory:\n'
                 self.topology_file = _resolve_path(input(topo_prompt).strip())
 
             topo_ext = os.path.splitext(self.topology_file)[1].lower()
-            allowed_top = ('.psf', '.pdb') if file_ext == 'dcd' else ('.gro', '.pdb')
+            allowed_top = ('.psf', '.pdb') if file_ext == 'dcd' else ('.gro', '.pdb', '.tpr')
             if topo_ext not in allowed_top:
                 allowed_str = ' or '.join(ext.lstrip('.') for ext in allowed_top)
                 raise ValueError(f"{file_ext.upper()} trajectories require a topology file in {allowed_str.upper()} format, got '{topo_ext or 'unknown'}'.")
-
-            get_chains=[]
-            if remove_water:
-                get_chains.append('V')
-            if remove_ions:
-                get_chains.append('S')
 
             u = mda.Universe(self.topology_file, self.trajectory_file_)
             c = np.unique(u.atoms.segids)
@@ -156,7 +141,7 @@ class dynapin:
                 self.chains_ = _normalize_chains(sc)
             s = self.chains_
             
-            self.pdb_file = os.path.join(self.job_path, self._preprocess_dcd(self.trajectory_file_, out_file, stride, self.topology_file, sc=s, chains=get_chains))
+            self.pdb_file = os.path.join(self.job_path, self._preprocess_dcd(self.trajectory_file_, out_file, stride, self.topology_file, sc=s))
 
         elif file_ext == 'pdb':
             u = mda.Universe(self.trajectory_file_)
@@ -275,12 +260,6 @@ class dynapin:
             'split_models':self.split_models_,
             'chains': self.chains_,
             'pdb_file': self.pdb_file,
-            'show_time_as': self.time_Type,
-            'timestep': self.timestep,
-            'timeunit': self.time_unit,
-            'remove_water': self.remove_water,
-            'remove_ions': self.remove_ions,
-
             'QualityControl': {
                 'Run': self.qc_flag,
                 'rmsd_data':self.rmsd_data
@@ -367,7 +346,7 @@ class dynapin:
         Return: None
         """
         u = mda.Universe(topology_file, trajectory_file)
-        name = output_file.split("\\")[-1].split(".")[0]
+        name = os.path.splitext(os.path.basename(output_file))[0]
 
         if chains is None:
             chains = []
@@ -389,7 +368,7 @@ class dynapin:
 
         ptm.main2(output_file, chains)
 
-        return name + "_chained.pdb"
+        return name + "_fixed.pdb"
         
 
     def run_quality_control(self, rmsd_data={'ref_struc':None, 'ref_frame':0}):
@@ -403,7 +382,7 @@ class dynapin:
         self.qc_flag = True
 
         c = self.QualityControl(self.pdb_file, self.target_path, rmsd_data=rmsd_data, job_path=self.job_path,
-                                timestep= self.timestep, time_unit = self.time_unit, time_type=self.time_Type, stride=self.stride)
+                                stride=self.stride)
         c.quality_tbls_overres()
         
         dockq_df = pd.DataFrame()
@@ -421,7 +400,8 @@ class dynapin:
         self.foldx_path = foldx_path
         self.rb_flag = True
         self.dssp_flag = True
-        c = self.ResidueBased(self.pdb_file, self.target_path, timestep= self.timestep, timeunit = self.time_unit, time_type=self.time_Type, stride=self.stride, job_path=self.job_path, foldx_path=foldx_path, run_dssp=True)
+        c = self.ResidueBased(self.pdb_file, self.target_path, 
+                              stride=self.stride, job_path=self.job_path, foldx_path=foldx_path, run_dssp=True)
         c.res_based_tbl()
         c.interface_table()
 
@@ -435,32 +415,26 @@ class dynapin:
         """
         self.ib_flag = True
         self.get_all_hph=get_all_hph
-        c = self.InteractionBased(self.pdb_file, self.target_path, get_all_hph=get_all_hph, timestep=self.timestep, timeunit=self.time_unit, time_type=self.time_Type, stride=self.stride)
+        c = self.InteractionBased(self.pdb_file, self.target_path, get_all_hph=get_all_hph, 
+                                  stride=self.stride)
         c.int_based_tbl()
 
     
     class QualityControl:
-        def __init__(self, pdb_file, target_path, job_path, rmsd_data, timestep, time_unit, time_type, stride):
+        def __init__(self, pdb_file, target_path, job_path, rmsd_data, 
+                     stride):
             """ A class to perform Quality Control analyses (RMSD, RG, and RMSF) of the trajectory. Initially runs private methods and defines RMSD, RG, and RMSF results of the trajectory.
 
             Return: None
             
             """
             self.stride = stride
-            self.timetype = time_type
-            self.timestep = timestep
             self.job_path = job_path
-            if time_type == 'Time':
-                self.u = mda.Universe(pdb_file)
-                if time_unit.lower() == 'ns' or time_unit.lower() == 'nanosecond':
-                    self.u.trajectory.units = {'time':'nanosecond', 'length': 'Angstrom'}
-            else:
-                self.u = mda.Universe(pdb_file, in_memory=True)
+            self.u = mda.Universe(pdb_file, in_memory=True)
 
             handler.test_rmsd_refstruc(rmsd_data['ref_struc'])
             handler.test_rmsd_refframe(rmsd_data['ref_frame'], len(self.u.trajectory))
         
-
             self.target_path = target_path
             self.segs = self.u.segments
             self.protein = self.u.select_atoms('protein')
@@ -471,47 +445,72 @@ class dynapin:
             self.rg_dict = self._calc_rg()
             self.rmsf_dict = self._calc_rmsf()
 
-            if time_type == 'Time':
-                self.header_overtime = ["Time (ns)"]
-            else:
-                self.header_overtime = ["Frame"]
+            self.header_overtime = ["Frame"]
             self.header_overres = ["Molecule", "Residue Number", "RMSF"]
 
-            for i, ts in enumerate(self.u.trajectory):
-                ts.time = i * timestep
-
-    
         def _calc_rmsd(self):
-            """ Calculates RMSD of each chain and the complex during the simulation.
-            
-
-            Return: Dict: A dictionary that contains the chains and complexes as keys and their corresponding RMSD values as values.
-            """
+            """ Calculates RMSD of each chain and the complex during the simulation. """
             n_frames = len(self.u.trajectory)
             if n_frames == 0:
                 warnings.warn("No frames found in trajectory; RMSD values are not calculated.")
                 return {}
             
             analysis = {}
-            # use protein backbone plus nucleic acid backbone so protein-DNA complexes are handled
+            # Define the general selection for backbone (Protein + DNA/RNA)
             backbone_sel = "(backbone or nucleicbackbone)"
-            for chain in self.segs:
-                chainid = chain.segid
-                backbone = self.u.select_atoms(f'(segid {chainid} or chainid {chainid}) and {backbone_sel}')
-                if backbone.n_atoms == 0:
-                    warnings.warn(f"No backbone atoms found for chain '{chainid}'. Skipping RMSD for this chain.")
-                    continue
-                R1 = RMSD(backbone, reference=self.rmsd_ref_struc, ref_frame=self.rmsd_ref_frame)
-                R1.run()
-                analysis[f"Chain {chainid}"] = [f"{x:.03f}" for x in R1.results.rmsd.T[2]]
 
-            backbone = self.u.select_atoms(backbone_sel)
-            if backbone.n_atoms == 0:
-                warnings.warn("No backbone atoms found for the complex. Complex RMSD is not calculated.")
+            # Load the reference universe ONCE outside the loop to save memory/time
+            if self.rmsd_ref_struc:
+                ref_universe = mda.Universe(self.rmsd_ref_struc)
+
+                for chain in self.segs:
+                    chainid = chain.segid
+                    
+                    current_chain_sel = f'(segid {chainid} or chainid {chainid}) and {backbone_sel}'
+                    backbone_traj = self.u.select_atoms(current_chain_sel)
+                    backbone_ref = ref_universe.select_atoms(current_chain_sel)
+
+                    if backbone_traj.n_atoms == 0:
+                        warnings.warn(f"No backbone atoms found for chain '{chainid}'. Skipping RMSD.")
+                        continue
+
+                    if backbone_traj.n_atoms != backbone_ref.n_atoms:
+                        warnings.warn(f"Atom mismatch for Chain {chainid}: Traj={backbone_traj.n_atoms}, Ref={backbone_ref.n_atoms}. Skipping.")
+                        continue
+                    R1 = RMSD(backbone_traj, reference=backbone_ref, ref_frame=self.rmsd_ref_frame)
+                    R1.run()
+                    analysis[f"Chain {chainid}"] = [f"{x:.03f}" for x in R1.results.rmsd.T[2]]
+
+                complex_traj = self.u.select_atoms(backbone_sel)
+
+                complex_ref = ref_universe.select_atoms(backbone_sel)
+
+                if complex_traj.n_atoms == 0:
+                    warnings.warn("No backbone atoms found for the complex. Complex RMSD is not calculated.")
+                elif complex_traj.n_atoms != complex_ref.n_atoms:
+                    warnings.warn(f"Atom mismatch for Complex: Traj={complex_traj.n_atoms}, Ref={complex_ref.n_atoms}. Complex RMSD skipped.")
+                else:
+                    R1 = RMSD(complex_traj, reference=complex_ref, ref_frame=self.rmsd_ref_frame)
+                    R1.run()
+                    analysis["Complex"] = [f"{x:.03f}" for x in R1.results.rmsd.T[2]]
             else:
-                R1 = RMSD(backbone, reference=self.rmsd_ref_struc, ref_frame=self.rmsd_ref_frame)
-                R1.run()
-                analysis["Complex"] = [f"{x:.03f}" for x in R1.results.rmsd.T[2]]
+                 for chain in self.segs:
+                     chainid = chain.segid
+                     backbone = self.u.select_atoms(f'(segid {chainid} or chainid {chainid}) and {backbone_sel}')
+                     if backbone.n_atoms == 0:
+                         warnings.warn(f"No backbone atoms found for chain '{chainid}'. Skipping RMSD for this chain.")
+                         continue
+                     R1 = RMSD(backbone, reference=self.rmsd_ref_struc, ref_frame=self.rmsd_ref_frame)
+                     R1.run()
+                     analysis[f"Chain {chainid}"] = [f"{x:.03f}" for x in R1.results.rmsd.T[2]]
+    
+                 backbone = self.u.select_atoms(backbone_sel)
+                 if backbone.n_atoms == 0:
+                     warnings.warn("No backbone atoms found for the complex. Complex RMSD is not calculated.")
+                 else:
+                     R1 = RMSD(backbone, reference=self.rmsd_ref_struc, ref_frame=self.rmsd_ref_frame)
+                     R1.run()
+                     analysis["Complex"] = [f"{x:.03f}" for x in R1.results.rmsd.T[2]]                
 
             return analysis
 
@@ -604,16 +603,7 @@ class dynapin:
             import pandas as pd
             import numpy as np
 
-            time_type = getattr(self, "time_Type", getattr(self, "time_type", "Frame")) or "Frame"
-            use_time = (str(time_type).lower() == "time")
-
-            step_ns = None
-            if use_time and getattr(self, "timestep", None) is not None:
-                step = float(self.timestep)
-                unit = (getattr(self, "time_unit", None) or "").lower()
-                step_ns = step / 1000.0 if unit == "ps" else step  # assume already ns otherwise
-
-            key = "Time (ns)" if use_time and step_ns is not None else "Frame"
+            key="Frame"
 
             if not hasattr(self, "rmsd_dict") or not hasattr(self, "rg_dict"):
                 raise RuntimeError("rmsd_dict/rg_dict are not available; run QualityControl steps first.")
@@ -629,10 +619,7 @@ class dynapin:
             qc_df = pd.DataFrame()
 
             if n_rows > 0:
-                if key == "Frame":
-                    key_vals = np.arange(n_rows, dtype=int) * self.stride
-                else:
-                    key_vals = np.arange(n_rows, dtype=float) * step_ns
+                key_vals = np.arange(n_rows, dtype=int) * self.stride
 
                 cols = [key]
                 data_cols = {}
@@ -663,7 +650,7 @@ class dynapin:
                     dq = dockq_df.copy()
 
                     sort_key = None
-                    for cand in ("Time (ns)", "Frame", "time", "Time", "frame"):
+                    for cand in ("Frame", "frame"):
                         if cand in dq.columns:
                             sort_key = cand
                             break
@@ -766,12 +753,6 @@ class dynapin:
             df = df.reset_index(drop=True)
             df["Frame"] = df.index * self.stride
 
-            if getattr(self, "time_Type", "Frame") == "Time" and getattr(self, "timestep", None):
-                if getattr(self, "time_unit", None) == "ps":
-                    df["Time (ns)"] = df["Frame"] * float(self.timestep) / 1000.0
-                else:
-                    df["Time (ns)"] = df["Frame"] * float(self.timestep)
-
             return df
                 
 
@@ -799,7 +780,8 @@ class dynapin:
             file.close()
 
     class ResidueBased:
-        def __init__(self, pdb_path, target_path, time_type, timestep, timeunit, stride, job_path, foldx_path, run_dssp):
+        def __init__(self, pdb_path, target_path, 
+                     stride, job_path, foldx_path, run_dssp):
             """ A class to perform Residue Based analyses such as core-rim, and  biophysical type classifications; Van der Waals, electrostatic, desolvation, and hydrogen bond energies either between same-chain or different chain residues. Also prints the interface class that residues had with the highest percentage for all simulation time. Initially calculates rASA values and residue energies.
             
             Keyword arguments:
@@ -807,21 +789,12 @@ class dynapin:
             target_path -- Path to 'tables' folder
             Return: None
             """
-            self.time_type = time_type
-            self.timestep = timestep
-            self.timeunit = timeunit
             self.stride = stride
             self.foldx_path=foldx_path
             self.run_dssp = run_dssp               
 
-            if self.time_type and 'Time' in self.time_type:
-                if self.timeunit.lower() == 'ns' or self.timeunit.lower() == 'nanosecond':
-                    t = 'Time (ns)'
-            else:
-                t = 'Frame'
-
             self.target_path = target_path
-            self.header = [f"{t}", "Chain", "Residue", "Residue Number","rASAc", "rASAm", "delta rASA", "SASA",
+            self.header = ["Frame", "Chain", "Residue", "Residue Number","rASAc", "rASAm", "delta rASA", "SASA",
                            "Interface Label", "Residue Biophysical Type"]
 
             if self.foldx_path:
@@ -1094,10 +1067,7 @@ class dynapin:
                         except:
                             biophy_class = None
                         
-                        if self.time_type == 'Time':
-                            t = int(frame) * int(self.stride) * float(self.timestep)
-                        else:
-                            t = frame * self.stride
+                        t = frame * self.stride
                         
                         row_list = [f"{round(t,3)}", chain, val.residueType, str(resnum), f'{rasc:.03f}', f'{rasm:.03f}', f'{delta_ras:.03f}', f'{nbsa:.03f}', str(label), str(biophy_class)]
                         
@@ -1159,7 +1129,9 @@ class dynapin:
 
 
     class InteractionBased:
-        def __init__(self, pdb_path, target_path, timestep, timeunit, time_type, stride, get_all_hph=False):
+        def __init__(self, pdb_path, target_path, 
+                     #timestep, timeunit, time_type, 
+                     stride, get_all_hph=False):
             """ A class to calculate Hydrogen, Electrostatic, and Hydrophobic interactions with atom informations that contribute to the interaction, and writes interaction information for all frames to a .csv file.
             
             Keyword arguments:
@@ -1168,11 +1140,8 @@ class dynapin:
             get_all_hph -- Boolean. If True, prints all possible hydrophobic interactions. By default, prints only the closest interaction. 
             Return: None
             """
-            self.timeunit = timeunit
-            self.time_type = time_type
-            self.stride = stride
-            self.timestep = timestep
 
+            self.stride = stride
             self.hph_status = get_all_hph
             self.pdb_path = pdb_path
             self._struct = app.PDBFile(pdb_path)
@@ -1235,21 +1204,14 @@ class dynapin:
                 warnings.warn("No coordinates available to compute interactions; interaction table will remain empty.")
                 handle.close()
                 return
-            if self.time_type == 'Time':
-                if self.timeunit.lower() == 'ns' or self.timeunit.lower() == 'nanosecond':
-                    t = 'Time (ns),'
-            else:
-                t = 'Frame,'
+            t = 'Frame,'
             handle.write(t + ",".join(return_list[0][0].columns.tolist()) + "\n")
 
             for tup in return_list:
                 df = tup[0]
                 frame = tup[1]
 
-                if t != 'Frame,':
-                    frame = int(frame) * float(self.timestep) * int(self.stride)
-                else:
-                    frame = frame * self.stride
+                frame = frame * self.stride
 
                 df.insert(0, t.rstrip(','), round(frame,3))
                 df.to_csv(handle, index=False, mode="w+", header=False)
