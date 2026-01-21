@@ -123,7 +123,7 @@ output_dir/
 │   └── res_trajectory_props.csv     # Residue-wise properties (Energy, SASA, Secondary Structure)
 │
 ├── models.zip                       # Archive of extracted PDB frames used for analysis
-├── *_chained_standardized.pdb       # Pre-processed structure files
+├── *_fixed_standardized.pdb         # Pre-processed structure files
 ├── plot_params.json                 # Configuration used for generating plots
 └── table_params.json                # Configuration used for calculations
 ```
