@@ -11,7 +11,7 @@ warnings.filterwarnings('ignore')
 try:
     from DynaPIN import __version__
 except ImportError:
-    __version__ = "0.1.1" 
+    __version__ = "0.1.5" 
 
 def print_banner():
     """
