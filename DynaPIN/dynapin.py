@@ -48,12 +48,7 @@ parser.add_argument('-c', '--commands', type=str, help="Commands to run (comma-s
 #job_name
 parser.add_argument('-o', '--output_dir', type=str, help='The name of the job, if null, DynaPIN will generate an output directory from input file.')
 #tables
-parser.add_argument('--remove_water', type=bool, help="Removes water if True. Default is True.")
-parser.add_argument('--remove_ions', type=bool, help="Removes ions if True. Default is True.")
 parser.add_argument('--foldx_path', type=str, help="(Optional) Path to FoldX executable. If omitted, FoldX calculations are skipped.")
-parser.add_argument('--time_as', type=str, help="'Frame' or 'Time'. If Time, you should provide time unit with --timeunit arguman.")
-parser.add_argument('--timestep', type=str, help="Timestep value of simulation.")
-parser.add_argument('--timeunit', type=str, help="Nanosecond or ns is acceptable for now.")
 parser.add_argument('--topology_file', type=str, help="Path of topology file for dcd trajectories.")
 parser.add_argument('-s', '--stride', type=int, help="Stride value.")
 parser.add_argument('-sm', '--split_models', type=bool, help="Whether models will be splitted or not.")
@@ -189,12 +184,7 @@ def main():
             split_models = table_data['split_models']
             chains = table_data['chains']
             topology_file = table_data['topology_file']
-            time_as = table_data['show_time_as']
-            timestep = table_data['timestep']
-            timeunit = table_data['timeunit']
-            remove_water = table_data['remove_water']
-            remove_ions = table_data['remove_ions']
-            
+        
 
         else:
             trajectory_file = args.trajectory_file
@@ -203,22 +193,11 @@ def main():
             split_models = args.split_models
             chains = args.chains
             topology_file = args.topology_file
-            time_as = args.time_as
-            timestep = args.timestep
-            timeunit = args.timeunit
-            remove_water = args.remove_water
-            remove_ions = args.remove_ions
         
         if not stride:
             stride = 1
         if not split_models:
             split_models=True
-        if not timestep:
-            timestep=1.0
-        if remove_water is None:
-            remove_water = True
-        if remove_ions is None:
-            remove_ions = True
             
         if output_dir:
             output_dir = os.path.abspath(output_dir)
@@ -240,8 +219,8 @@ def main():
         topology_file   = _paths(topology_file) if topology_file else None
  
         print('Creating DynaPIN class...\n')
-        mol = dynapin(trajectory_file=trajectory_file, stride=stride, split_models=split_models, chains=chains, output_dir=output_dir, topology_file=topology_file,
-                        show_time_as=time_as, timestep=timestep, time_unit=timeunit, remove_water=remove_water, remove_ions=remove_ions)
+        mol = dynapin(trajectory_file=trajectory_file, stride=stride, split_models=split_models, chains=chains, output_dir=output_dir, topology_file=topology_file
+                        )
 
         print(f'Your DynaPIN Class has been created with the following parameters:\n\tOutput directory:{mol.output_dir}\n\tTrajectory File: {trajectory_file}\n\tTopology File: {topology_file}\n\tStride: {stride}\n\tSplit Models: {split_models}\n\tChain Selection: {chains}\n')
         print_stars(1)
@@ -260,12 +239,16 @@ def main():
 
             if not rmsd_rf:
                 rmsd_rf = 0
+            else:
+                rmsd_rf = int(rmsd_rf/stride)
+                print(rmsd_rf)
+
 
             print('Running Quality Control Analysis...\n')
             start_time = datetime.now()
             mol.run_quality_control(rmsd_data={'ref_struc':rmsd_rs, 'ref_frame':rmsd_rf})
             end_time = datetime.now()
-            print(f"Quality Control Analysis has run successfully!\nRunning duration: {end_time - start_time}\n") #time ekle
+            print(f"Quality Control Analysis has run successfully!\nRunning duration: {end_time - start_time}\n")
             print_stars(1)
             print("\n")
         if 'ResidueBased' in table_commands:
