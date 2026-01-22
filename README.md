@@ -98,7 +98,7 @@ dynapin --output_dir=TestRun --trajectory_file=sim.dcd --topology_file=top.psf -
 ### Option 2: Interactive API Workflow
 Beyond the command line, DynaPIN serves as a powerful Python library. We provide a comprehensive Jupyter Notebook that demonstrates this usage, allowing for inline 3D visualization and granular control over every analysis step.
 
-* **Notebook:** [`DynaPIN_API_Workflow.ipynb`](DynaPIN_API_Workflow.ipynb)
+* **Notebook:** [`DynaPIN_API_workflow.ipynb`](DynaPIN_API_workflow.ipynb)
 * **Use Case:** Ideal for users who prefer an interactive environment (Jupyter/Lab) or wish to integrate DynaPIN into custom Python scripts.
 
 To run the workflow interactively:
