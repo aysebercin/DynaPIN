@@ -46,6 +46,12 @@ Before installing DynaPIN, please ensure you have the following:
 * **Version Control:** [Git](https://git-scm.com/) is recommended for cloning the repository.
 * **Python:** The package supports Python 3.10 and higher.
 
+## 🛠 External Dependencies
+
+While the conda environment handles most libraries, please note:
+
+**FoldX:** Due to licensing, FoldX cannot be auto-installed. Download it from [FoldX Suite](https://foldxsuite.crg.eu/) and provide the path via `--foldx_path`.
+
 ## 📦 Installation
 
 DynaPIN utilizes a unified **Conda** environment to manage Python dependencies and system binaries (including the custom C-extensions for `interfacea`).
@@ -101,12 +107,6 @@ To run the workflow interactively:
 conda activate dynapin
 jupyter notebook DynaPIN_API_Workflow.ipynb
 ```
-## 🛠 External Dependencies
-
-While the conda environment handles most libraries, please note:
-
-**FoldX:** Due to licensing, FoldX cannot be auto-installed. Download it from [FoldX Suite](https://foldxsuite.crg.eu/) and provide the path via `--foldx_path`.
-
 ## 📂 Output Files
 
 DynaPIN organizes the analysis outputs into a structured directory as shown below. Results are automatically organized into `tables/` (CSV data) and `figures/` (High-quality Plots).
@@ -134,9 +134,7 @@ output_dir/
 ```
 
 
-❗The full datasets (input MD trajectories) and application examples (DynaPIN analysis outputs) for the test cases presented in our manuscript are openly available on Zenodo:
-
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18331985.svg)](https://doi.org/10.5281/zenodo.18331985)
+❗The full datasets (input MD trajectories) and application examples (DynaPIN analysis outputs) for the test cases presented in our manuscript are openly available on Zenodo: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18331985.svg)](https://doi.org/10.5281/zenodo.18331985)
 
 This dataset includes:
 - **Trajectory_Inputs/:** Raw trajectory (.dcd) and topology (.pdb) file for the Rigid (6CWG), Medium (1ZM4), and Difficult (2OT3) test cases.
