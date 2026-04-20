@@ -254,7 +254,7 @@ class dynapin:
     def _get_params_(self):
         params = {
             'output_dir':self.output_dir,
-            'input_file': self.trajectory_file_,
+            'trajectory_file': self.trajectory_file_,
             'topology_file': self.topology_file,
             'stride': self.stride,
             'split_models':self.split_models_,
