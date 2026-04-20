@@ -1,4 +1,4 @@
-# DynaPIN: Dynamic Analysis of Protein INterfaces
+# DynaPIN: Analysis of Dynamic Protein INterfaces
 
 ![Version](https://img.shields.io/badge/version-0.1.5-blue?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square)
