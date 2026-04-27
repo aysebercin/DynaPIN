@@ -24,7 +24,7 @@ PLOT_GROUPS = {
 
 
 class Plotter:
-    def __init__(self, output_dir=None):
+    def __init__(self, output_dir=None, threshold=50.0):
         """A class to visualize several analyses from dynapin class. Reads csv files and performs visualizations. Saves figures into the folder named 'figures', with 300 dpi and .png extension.
         
         Return: return_description
@@ -33,6 +33,7 @@ class Plotter:
 
         #params
         self._output_dir = output_dir
+        self.threshold = float(threshold)
         self._rmsd = False
         self._rmsd_path = None
         self._rg = False
@@ -53,7 +54,6 @@ class Plotter:
         self._bar_path = None
         self._bar_palette = None
         self._ene = False
-        self._ene_thr = None
         self._ene_intf = None
         self._ene_path = None
         self._plot_SASA = False
@@ -71,7 +71,7 @@ class Plotter:
         self._plot_dssp = False
         self._dssp_path = None
         self._dssp_intf_path = None
-        self._dssp_threshold = 50.0
+        self.handler = tables_errors()
 
         sns.set_theme(context='notebook', style='whitegrid')
         plt.rcParams.update({
@@ -145,7 +145,6 @@ class Plotter:
         Return: None
         """
         
-        
         if path:
             df = self._load_csv_safe(path, "RMSD table")
         else:
@@ -173,7 +172,7 @@ class Plotter:
         ax.set_xlabel(time_name)
         ax.set_ylabel(f'RMSD (Å)')
 
-        ax.set_title(f"Time Evolution of backbone Root Mean Square Deviation (RMSD)")
+        ax.set_title(f"Time Evolution of Backbone Root Mean Square Deviation (RMSD)")
         self._place_axis_legend(ax)
         fig.savefig(os.path.join(self.target_path, f'qc_rmsd_backbone.png'), dpi=300, bbox_inches='tight')
 
@@ -238,7 +237,7 @@ class Plotter:
             if path_to_load:
                 intf_df = self._load_interface_table(path_to_load)
                 if intf_df is not None and not intf_df.empty:
-                    mask = (intf_df["Interface Label"].isin([2, 3, 4])) & (intf_df["Interface_score"] >= 50.0)
+                    mask = (intf_df["Interface_score"] >= self.threshold)
                     filtered_intf_df = intf_df[mask]
                     if not filtered_intf_df.empty:
                         g2 = filtered_intf_df.groupby("Chain")
@@ -277,7 +276,6 @@ class Plotter:
                 except KeyError:
                     pass  
 
-            # Plot the main RMSF line
             ax.plot(chain_data["Residue Number"], chain_data["RMSF"], color=chain_color, linewidth=2)
 
             # Find which data points are interface residues and plot markers
@@ -294,7 +292,7 @@ class Plotter:
             ax.set_title(f"Chain {chain_name}")
 
         axes[0].set_ylabel("RMSF (Å)")
-        plt.suptitle("Residue-based backbone Root Mean Square Fluctuation (RMSF)")
+        plt.suptitle("Residue-based Backbone Root Mean Square Fluctuation (RMSF)")
         
         if any_interface_markers:
             legend_ax = axes[1] if n_groups > 1 else axes[0]
@@ -361,7 +359,6 @@ class Plotter:
         if df is None:
             return
 
-        
         self._lrmsd_path = path
 
         if "DockQ_mapping" not in df.columns:
@@ -382,9 +379,7 @@ class Plotter:
         ax.set_xlabel(df.columns[0])
         ax.set_ylabel('$l$-RMSD (Å)')
         ax.set_ylim(bottom=0)
-
-
-        ax.set_title('Time Evolution of Ligand Displacement Profile ($l$-RMSD)')
+        ax.set_title('Time Evolution of Ligand Displacement ($l$-RMSD)')
         self._place_axis_legend(ax, title="Mapping")
         fig.savefig(os.path.join(self.target_path, f'qc_lrmsd_ligand.png'), dpi=300, bbox_inches='tight')
 
@@ -403,7 +398,6 @@ class Plotter:
         if df is None:
             return
 
-        
         self._dockq_path = path
 
         if "DockQ_mapping" not in df.columns:
@@ -585,9 +579,8 @@ class Plotter:
         self._place_axis_legend(ax, title="Biophysical Type", bbox=(1.02, 1), loc='upper left')
         fig.savefig(os.path.join(self.target_path, f'res_biophys_composition.png'), dpi=300, bbox_inches='tight')
 
-    def plot_DSSP(self, threshold=50.0, intf_path=None, path=None):
+    def plot_DSSP(self, intf_path=None, path=None):
         self._plot_DSSP = True 
-        self._dssp_threshold=threshold
         
         if path:
             df = self._load_csv_safe(path, "DSSP residue table")
@@ -609,7 +602,7 @@ class Plotter:
 
         time_name = df.columns[0]
 
-        mask = (intf_df["Interface Label"].isin([2, 3, 4])) & (intf_df["Interface_score"] >= float(threshold))
+        mask = (intf_df["Interface_score"] >= self.threshold)
         int_df = intf_df[mask]
 
         df = df.loc[:, [time_name,"Chain",'Residue', 'Residue Number', 'Secondary Structure']]
@@ -656,9 +649,7 @@ class Plotter:
         for ax, chain, interface in zip(axes, groups, interface_groupped):
         
             chain_df = chain[1]
-
             intf_ch = interface[1]
-
             intf_residues = intf_ch['Residue'].tolist()
             chain_df = chain_df[chain_df['Residue'].isin(intf_residues)]
 
@@ -680,7 +671,7 @@ class Plotter:
             ax.set_title(f"Chain {chain[0][0]}")
             ax.get_legend().remove()
 
-        plt.suptitle("Secondary Structure Profile of Interface Residues")
+        plt.suptitle("Time Evolution ofSecondary Structure Profile of Interface Residues")
         legend_handles = []
         legend_labels = []
         for code, label in mylabels.items():
@@ -778,19 +769,19 @@ class Plotter:
         if not self._bar_palette:
             self._bar_palette = [
                             # 1) H-bonds
-                            ["#A2C9EF",  # light  – bb–bb
-                            "#5286BA",  # medium – bb–sc / sc–bb
-                            "#1C3D5E"], # darker – sc–sc
+                            ["#A2C9EF",  
+                            "#5286BA",  
+                            "#1C3D5E"], 
 
                             # 2) Hydrophobic
-                            ["#ACF4E8",  # light  – bb–bb
-                            "#70C3B4",  # medium – bb–sc / sc–bb
-                            "#348D8C"], # darker – sc–sc
+                            ["#ACF4E8",  
+                            "#70C3B4",  
+                            "#348D8C"], 
 
                             # 3) Ionic
-                            ["#F3ABCF",  # light  – bb–bb
-                            "#CC6677",  # medium – bb–sc / sc–bb
-                            "#882255"], # darker – sc–sc
+                            ["#F3ABCF",  
+                            "#CC6677",  
+                            "#882255"], 
                         ]
                              
         backbones = {"HN", "N", "CA", "HA", "C", "O"}
@@ -851,7 +842,7 @@ class Plotter:
             chunk_pairs = [item[0] for item in entries]
             chunk_vals = np.array([item[1] for item in entries])
 
-            fig_width = max(12.0, len(chunk_pairs) * 0.8)
+            fig_width = max(6.0, len(chunk_pairs) * 0.6 + 4.0)
             fig, ax = plt.subplots(figsize=(fig_width, fixed_height))
 
             bottom = np.zeros(len(chunk_pairs))
@@ -869,13 +860,13 @@ class Plotter:
             plt.yticks([tick for tick in range(0, 101, 10)])
             plt.ylim(ymin=0, ymax=105)
 
-            plt.title(f"Frequency of Intermolecular {full_name} across simulation")
+            plt.title(f"Frequency of Intermolecular {full_name.title()} Across Simulation")
 
             outfile = os.path.join(self.target_path, f"int_pairwise_{x}_frequency.png")
             plt.savefig(outfile, dpi=300, bbox_inches='tight', format="png")
             plt.close(fig)
 
-    def plot_int_energy(self, threshold=50.0, intf_path=None, res_path=None):
+    def plot_int_energy(self, intf_path=None, res_path=None):
         """A function to perform boxplot visualization of interaction energy variation of residues that has constant interface label at least 50%-by default- of all simulation. Reads 'res_interface_stats' and 'res_trajectory_props.csv' files.
         
         Keyword arguments:
@@ -902,11 +893,9 @@ class Plotter:
         energy_df = energy_df_full[["Chain", "Residue", "Residue Number"] + energy_cols].copy()
 
         self._ene = True
-        self._ene_thr = threshold
         self._ene_intf = intf_path
         self._ene_path = res_path
-
-        mask = (intf_df["Interface Label"].isin([2, 3, 4])) & (intf_df["Interface_score"] >= float(threshold))
+        mask = (intf_df["Interface_score"] >= self.threshold)
         int_df_filtered = intf_df[mask]
 
         energy_df["Residue"] = [a + str(b) for a, b in zip(energy_df["Residue"], energy_df["Residue Number"])]
@@ -989,74 +978,21 @@ class Plotter:
     def _get_params_(self):
         params = {
             'output_dir':self._output_dir,
-            'output_path': self.target_path,
-            'table_path': self.table_path,
-            'chain_color_palette': self.chain_colors,
-            'complex_color': self.complex_color,
-            'PlotRMSD': {
-                'Run': self._rmsd,
-                'rmsd_table_path':self._rmsd_path
-                },
-            'PlotRG': {
-                'Run': self._rg,
-                'rg_table_path':self._rg_path
-                },
-            'PlotRMSF': {
-                'Run': self._rmsf,
-                'rmsf_table_path':self._rmsf_path,
-                'rmsf_intf_res_table': self._rmsf_intf_path
-                },
-            'PlotBiophys': {
-                'Run': self._biophys,
-                'biophys_table_path':self._biophys_path,
-                'biophys_palette': self._biophys_palette
-                },
-            'PlotSASA' : {
-                'Run': self._plot_SASA,
-                'sasa_path': self._sasa_path,
-            },
-            'PlotiRMSD': {
-                'Run': self._plot_irmsd,
-                'irmsd_path': self._irmsd_path,
-
-            },
-            'PlotlRMSD': {
-                'Run': self._plot_lrmsd,
-                'lrmsd_path': self._lrmsd_path,
-
-            },
-            'PlotDockQ': {
-                'Run': self._plot_dockq,
-                'dockq_path': self._dockq_path,
-
-            },
-            'PlotFnonnat': {
-                'Run': self._plot_fnonnat,
-                'fnonnat_path': self._fnonnat_path
-            },
-            'PlotFnat': {
-                'Run': self._plot_fnat,
-                'fnat_path': self._fnat_path
-            },
-            'PlotPairwiseFreq': {
-                'Run': self._bar,
-                'bar_table_path':self._bar_path,
-                'bar_palette': self._bar_palette
-                },
-            'PlotResEne': {
-                'Run': self._ene,
-                'interface_th':self._ene_thr,
-                'interface_table_path': self._ene_intf,
-                'residue_based_table': self._ene_path
-                },
-            'PlotDSSP': {
-                'Run': self._plot_dssp,
-                'dssp_path': self._dssp_path,
-                'dssp_threshold':self._dssp_threshold,
-                'dssp_intf_path':self._dssp_intf_path
-            },
-
-            }
+            'threshold': self.threshold,
+            'PlotRMSD': {'Run': self._rmsd},
+            'PlotRG': {'Run': self._rg},
+            'PlotRMSF': {'Run': self._rmsf},
+            'PlotBiophys': {'Run': self._biophys},
+            'PlotSASA' : {'Run': self._plot_SASA},
+            'PlotiRMSD': {'Run': self._plot_irmsd},
+            'PlotlRMSD': {'Run': self._plot_lrmsd},
+            'PlotDockQ': {'Run': self._plot_dockq},
+            'PlotFnonnat': {'Run': self._plot_fnonnat},
+            'PlotFnat': {'Run': self._plot_fnat},
+            'PlotPairwiseFreq': {'Run': self._bar},
+            'PlotResEne': {'Run': self._ene},
+            'PlotDSSP': {'Run': self._plot_dssp},
+        }
 
         for group_name, members in PLOT_GROUPS.items():
             params[group_name] = {
@@ -1066,4 +1002,4 @@ class Plotter:
 
         json_path = os.path.join(self.job_path, 'plot_params.json')
         with open(json_path, 'w+') as ofh:
-            json.dump(params, ofh)
+            json.dump(params, ofh, indent=4)

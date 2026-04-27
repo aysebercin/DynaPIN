@@ -103,9 +103,9 @@ class dynapin:
         if not os.path.exists(self.job_path): #create job folder
             os.mkdir(self.job_path)
 
-        self.target_path = os.path.join(self.job_path, 'tables') #define tables folder path
+        self.target_path = os.path.join(self.job_path, 'tables') 
 
-        if not  os.path.exists(self.target_path): #create tables folder
+        if not  os.path.exists(self.target_path): 
             os.mkdir(self.target_path)
 
         #check for preprocess ,define pdb_file
@@ -259,7 +259,6 @@ class dynapin:
             'stride': self.stride,
             'split_models':self.split_models_,
             'chains': self.chains_,
-            'pdb_file': self.pdb_file,
             'QualityControl': {
                 'Run': self.qc_flag,
                 'rmsd_data':self.rmsd_data
@@ -267,7 +266,6 @@ class dynapin:
             'ResidueBased':{
                 'Run': self.rb_flag,
                 'FoldX_path': self.foldx_path,
-                'Run_DSSP': self.dssp_flag
             },
             'InteractionBased': { 
                 'Run': self.ib_flag,
@@ -278,7 +276,7 @@ class dynapin:
 
         json_path = os.path.join(self.job_path, 'table_params.json')
         with open(json_path, 'w+') as ofh:
-            json.dump(params, ofh)
+            json.dump(params, ofh, indent=4)
 
         if self.split_models_:
             models_path = os.path.join(self.job_path, "models")
@@ -1132,8 +1130,7 @@ class dynapin:
 
     class InteractionBased:
         def __init__(self, pdb_path, target_path, 
-                     #timestep, timeunit, time_type, 
-                     stride, get_all_hph=False):
+                      stride, get_all_hph=False):
             """ A class to calculate Hydrogen, Electrostatic, and Hydrophobic interactions with atom informations that contribute to the interaction, and writes interaction information for all frames to a .csv file.
             
             Keyword arguments:

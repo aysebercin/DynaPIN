@@ -11,7 +11,7 @@ warnings.filterwarnings('ignore')
 try:
     from DynaPIN import __version__
 except ImportError:
-    __version__ = "0.1.5" 
+    __version__ = "1.0.0" 
 
 def print_banner():
     """
@@ -53,6 +53,7 @@ parser.add_argument('--topology_file', type=str, help="Path of topology file for
 parser.add_argument('-s', '--stride', type=int, help="Stride value.")
 parser.add_argument('-sm', '--split_models', type=bool, help="Whether models will be splitted or not.")
 parser.add_argument('-ch', '--chains', type=str, help="For heteromers, you can decide which two chains to be analyzed. Provide input such as 'A,B'.")
+parser.add_argument('--threshold', type=float, default=50, help="Threshold percentage for dynamic interface residues (default: 50.0)")
 parser.add_argument('--rmsd_rs', type=str, help="Path to reference structure for RMSD analyse.") 
 parser.add_argument('--rmsd_rf', type=int, help="Reference frame for RMSD analyze.")
 parser.add_argument('--table_json', type=str, help="JSON file path for analyse runs.")
@@ -184,8 +185,8 @@ def main():
             split_models = table_data['split_models']
             chains = table_data['chains']
             topology_file = table_data['topology_file']
+            threshold_di = table_data.get('threshold', 50.0)
         
-
         else:
             trajectory_file = args.trajectory_file
             output_dir = args.output_dir
@@ -193,6 +194,7 @@ def main():
             split_models = args.split_models
             chains = args.chains
             topology_file = args.topology_file
+            threshold_di = args.threshold
         
         if not stride:
             stride = 1
@@ -218,11 +220,11 @@ def main():
         trajectory_file = _paths(trajectory_file)
         topology_file   = _paths(topology_file) if topology_file else None
  
-        print('Creating DynaPIN class...\n')
+        print('Initializing DynaPIN Core Engine...')
         mol = dynapin(trajectory_file=trajectory_file, stride=stride, split_models=split_models, chains=chains, output_dir=output_dir, topology_file=topology_file
                         )
 
-        print(f'Your DynaPIN Class has been created with the following parameters:\n\tOutput directory:{mol.output_dir}\n\tTrajectory File: {trajectory_file}\n\tTopology File: {topology_file}\n\tStride: {stride}\n\tSplit Models: {split_models}\n\tChain Selection: {chains}\n')
+        print(f'\nDynaPIN Class created successfully with the following parameters:\n\tOutput directory:{mol.output_dir}\n\tTrajectory File: {trajectory_file}\n\tTopology File: {topology_file}\n\tStride: {stride}\n\tSplit Models: {split_models}\n\tChain Selection: {chains}\n\tDynamic Interface Residue Threshold: {threshold_di}\n')
         print_stars(1)
         print("\n")
 
@@ -248,7 +250,7 @@ def main():
             start_time = datetime.now()
             mol.run_quality_control(rmsd_data={'ref_struc':rmsd_rs, 'ref_frame':rmsd_rf})
             end_time = datetime.now()
-            print(f"Quality Control Analysis has run successfully!\nRunning duration: {end_time - start_time}\n")
+            print(f"Quality Control Analysis completed successfully! (Duration: {end_time - start_time})\n")
             print_stars(1)
             print("\n")
         if 'ResidueBased' in table_commands:
@@ -263,11 +265,13 @@ def main():
             if foldx_path is None:
                 warnings.warn("FoldX path not provided. Residue energy calculations will be skipped.")
 
-            print('Running Residue Based Analysis...\n')
+            print('Running Residue Based Analysis...')
+            print('(This may take several minutes to hours depending on your input size and stride value)\n')
+
             start_time = datetime.now()
             mol.run_res_based(foldx_path=foldx_path)
             end_time = datetime.now()
-            print(f"Residue Based Analysis has run successfully!\nRunning duration: {end_time - start_time}\n")
+            print(f"Residue Based Analysis completed successfully! (Duration: {end_time - start_time})\n")
             print_stars(1)
             print("\n")
 
@@ -282,17 +286,19 @@ def main():
             if all_hph is None or all_hph is False:
                 all_hph = False
             
-            print('Running Interaction Based Analysis... Running Interaction Analyze may take several minutes to hours, based on your input.\n')
+            print('Running Interaction Based Analysis...')
+            print('(This may take several minutes to hours depending on your input size and stride value)\n')
             start_time = datetime.now()
             mol.run_inter_based(get_all_hph=all_hph)
             end_time = datetime.now()
-            print(f"Interaction Based Analysis has run successfully!\nRunning duration: {end_time - start_time}\n")
+            print(f"Interaction Based Analysis completed successfully! (Duration: {end_time - start_time})\n")
             print_stars(1)
             print("\n")
 
         if not a_json_:
             mol._get_params_()
-            print("Your run parameters are downloaded as table_params.json")
+            print("Analysis parameters saved as 'table_params.json'")
+            print("\n")
         else:
             f.close()
 
@@ -300,56 +306,53 @@ def main():
     if plot_commands:
         if p_json:
             output_dir = plot_data['output_dir']
+            global_threshold = plot_data.get('threshold', 50.0) 
         else:
             # If analysis was just run, use its output dir. Otherwise, use arg.
             output_dir = mol.output_dir if mol else args.output_dir
-
-
-        print_stars(1)
-        print("\n")
-        draw = Plotter(output_dir=output_dir)
-        print(f'Your Plotter Class has been created\n')
+            global_threshold = args.threshold
 
         print_stars(1)
         print("\n")
+        draw = Plotter(output_dir=output_dir, threshold=global_threshold)
 
-        print('Your plots are processing...\n')
+        print('Generating requested plots...\n')
         print_stars(1)
         print("\n")
 
         if 'PlotRMSD' in plot_commands:
             
             if p_json:
-                rmsd_tpath = plot_data['PlotRMSD']['rmsd_table_path']
+                rmsd_tpath = plot_data['PlotRMSD'].get('rmsd_table_path')
                 draw.plot_rmsd(path=rmsd_tpath)
             else:
                 draw.plot_rmsd()
-            print('Time Evolution of backbone RMSD plot is done!\n')
+            print('Time Evolution of Backbone Root Mean Square Deviation (RMSD) plot is done!\n')
 
         if 'PlotRG' in plot_commands:
             
             if p_json:
-                rg_tpath = plot_data['PlotRG']['rg_table_path']
+                rg_tpath = plot_data['PlotRG'].get('rg_table_path')
                 draw.plot_rg(path=rg_tpath)
             else:
                 draw.plot_rg()
-            print('Dynamic Variation of Radius of Gyration (R_g) plot is done!\n')
+            print('Time Evolution of Radius of Gyration ($R_g$) plot is done!\n')
             
         if 'PlotRMSF' in plot_commands:
 
             if p_json:
-                rmsf_tpath = plot_data['PlotRMSF']['rmsf_table_path']
-                rmsf_itpath = plot_data['PlotRMSF']['rmsf_intf_res_table']
+                rmsf_tpath = plot_data['PlotRMSF'].get('rmsf_table_path')
+                rmsf_itpath = plot_data['PlotRMSF'].get('rmsf_intf_res_table')
                 draw.plot_rmsf(rmsf_path=rmsf_tpath, intf_path=rmsf_itpath)
             else:
                 draw.plot_rmsf()
-            print('Residue-wise backbone RMSF plot is done!\n')
+            print('Residue-based Backbone Root Mean Square Fluctuation (RMSF) plot is done!\n')
         
         if 'PlotBiophys' in plot_commands:
 
             if p_json:
-                biophys_tpath = plot_data['PlotBiophys']['biophys_table_path']
-                biophys_palette = plot_data['PlotBiophys']['biophys_palette']
+                biophys_tpath = plot_data['PlotBiophys'].get('biophys_table_path')
+                biophys_palette = plot_data['PlotBiophys'].get('biophys_palette')
 
                 if biophys_palette:
                     draw._biophys_palette = biophys_palette
@@ -357,45 +360,45 @@ def main():
             else:
                 draw.plot_biophys()
             
-            print('Physicochemical Composition of Interface Layers plot is done!\n')
+            print('Physicochemical Composition of Interface Layers (Levy, 2010) plot is done!\n')
         
         if 'PlotSASA' in plot_commands:
 
             if p_json:
-                sasa_tpath = plot_data['PlotSASA']['sasa_path']
+                sasa_tpath = plot_data['PlotSASA'].get('sasa_path')
                 draw.plot_SASA(path=sasa_tpath)
 
             else:
                 draw.plot_SASA()
             
-            print('Dynamic Evolution of Interface Area (SASA) plot is done!\n')
+            print('Time Evolution of Solvent Accessible Surface Area of Interface plot is done!\n')
 
         if 'PlotiRMSD' in plot_commands:
 
             if p_json:
-                irmsd_tpath = plot_data['PlotiRMSD']['irmsd_path']
+                irmsd_tpath = plot_data['PlotiRMSD'].get('irmsd_path')
                 draw.plot_irmsd(path=irmsd_tpath)
 
             else:
                 draw.plot_irmsd()
 
-            print('Time Evolution of Interface Stability (i-RMSD) plot is done!\n')
+            print('Time Evolution of Interface Stability ($i$-RMSD) plot is done!\n')
 
         if 'PlotlRMSD' in plot_commands:
 
             if p_json:
-                lrmsd_tpath = plot_data['PlotlRMSD']['lrmsd_path']
+                lrmsd_tpath = plot_data['PlotlRMSD'].get('lrmsd_path')
                 draw.plot_lrmsd(path=lrmsd_tpath)
 
             else:
                 draw.plot_lrmsd()
 
-            print('Ligand RMSD (l-RMSD) Displacement Profile plot is done!\n')
+            print('Time Evolution of Ligand Displacement ($l$-RMSD) plot is done!\n')
 
         if 'PlotDockQ' in plot_commands:
 
             if p_json:
-                dockq_tpath = plot_data['PlotDockQ']['dockq_path']
+                dockq_tpath = plot_data['PlotDockQ'].get('dockq_path')
                 draw.plot_dockq(path=dockq_tpath)
 
             else:
@@ -406,30 +409,30 @@ def main():
         if 'PlotFnonnat' in plot_commands:
 
             if p_json:
-                fnonnat_tpath = plot_data['PlotFnonnat']['fnonnat_path']
+                fnonnat_tpath = plot_data['PlotFnonnat'].get('fnonnat_path')
                 draw.plot_fnonnat(path=fnonnat_tpath)
 
             else:
                 draw.plot_fnonnat()
 
-            print('Fraction of Non-Native Contacts (f_nonnat) plot is done!\n')
+            print('Time Evolution of Fraction of Non-Native Contacts ($f_{nonnat}$) plot is done!\n')
         
         if 'PlotFnat' in plot_commands:
 
             if p_json:
-                fnat_tpath = plot_data['PlotFnat']['fnat_path']
+                fnat_tpath = plot_data['PlotFnat'].get('fnat_path')
                 draw.plot_fnat(path=fnat_tpath)
 
             else:
                 draw.plot_fnat()
 
-            print('Fraction of Native Contacts (f_nat) plot is done!\n')
+            print('Time Evolution of Fraction of Native Contacts ($f_{nat}$) plot is done!\n')
 
         if 'PlotPairwiseFreq' in plot_commands:
 
             if p_json:
-                bondfreq_tpath = plot_data['PlotPairwiseFreq']['bar_table_path']
-                bondfreq_palette = plot_data['PlotPairwiseFreq']['bar_palette']
+                bondfreq_tpath = plot_data['PlotPairwiseFreq'].get('bar_table_path')
+                bondfreq_palette = plot_data['PlotPairwiseFreq'].get('bar_palette')
 
                 if bondfreq_palette:
                     draw._bar_palette = bondfreq_palette
@@ -439,42 +442,37 @@ def main():
             else:
                 draw.plot_pairwise_freq()
 
-            print('Frequency of Intermolecular Interaction plots are done!\n')
+            print('Frequency of Intermolecular Interactions Across Simulation plots are done!\n')
 
         if 'PlotResEne' in plot_commands:
-            int_ene_thr = 50.0
             int_ene_itpath = None
             int_ene_tpath  = None
 
             if p_json:
                 pe = plot_data.get('PlotResEne', {})
-                int_ene_thr    = pe.get('interface_th', int_ene_thr)
                 int_ene_itpath = pe.get('interface_table_path')
                 int_ene_tpath  = pe.get('residue_based_table')
             
-            success = draw.plot_int_energy(threshold=int_ene_thr, intf_path=int_ene_itpath, res_path=int_ene_tpath)
+            success = draw.plot_int_energy(intf_path=int_ene_itpath, res_path=int_ene_tpath)
             if success:
                 print('Distribution of Interface Residue Energies plots are done!\n')
 
         if 'PlotDSSP' in plot_commands:
             dssp_path = None
-            dssp_threshold = 50.0
             dssp_intf_path = None
 
             if p_json:
-                dssp_path = plot_data['PlotDSSP']['dssp_path']
-                dssp_threshold = plot_data['PlotDSSP']['dssp_threshold']
-                dssp_intf_path = plot_data['PlotDSSP']['dssp_intf_path']
+                dssp_path = plot_data['PlotDSSP'].get('dssp_path')
+                dssp_intf_path = plot_data['PlotDSSP'].get('dssp_intf_path')
 
-            draw.plot_DSSP(path=dssp_path, threshold=dssp_threshold, intf_path=dssp_intf_path)
-            print('Secondary Structure Stability at the Protein Interface plot is done!\n')
-
+            draw.plot_DSSP(path=dssp_path, intf_path=dssp_intf_path)
+            print('Time Evolution of Secondary Structure Profile of Interface Residues plot is done!\n')
 
         if not p_json:
             draw._get_params_()
             print_stars(1)
             print("\n")
-            print("Your plot run parameters are downloaded as plot_params.json")
+            print("Plot parameters saved as plot_params.json")
             print("\n")
             print_stars(1)
             print("\n")
