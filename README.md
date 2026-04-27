@@ -1,6 +1,6 @@
 # DynaPIN: Analysis of Dynamic Protein INterfaces
 
-![Version](https://img.shields.io/badge/version-0.1.5-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-1.0.0-blue?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square)
 ![License](https://img.shields.io/badge/license-Apache%202.0-green?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey?style=flat-square)
@@ -40,8 +40,8 @@ DynaPIN is built on object-oriented and modular Python architecture, integrating
 
 Before installing DynaPIN, please ensure you have the following:
 
-* **Operating System:** Linux, macOS, or Windows.
-    * *Note for Windows Users:* It is recommended to use **WSL (Windows Subsystem for Linux)** for the best compatibility with DSSP.
+* **Operating System:** Linux and macOS.
+    * *Note for Windows Users:* It is recommended to use **WSL (Windows Subsystem for Linux)** for the best compatibility with DynaPIN.
 * **Package Manager:** [Anaconda](https://www.anaconda.com/) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html) is required to manage the environment.
 * **Version Control:** [Git](https://git-scm.com/) is recommended for cloning the repository.
 * **Python:** The package supports Python 3.10 and higher.
@@ -92,6 +92,7 @@ dynapin --output_dir=TestRun --trajectory_file=sim.dcd --topology_file=top.psf -
 | `-c`, `--commands` | Modules to run (e.g., `QualityControl`, `ResidueBased`, `all_analysis`). |
 | `-s`, `--stride` | Step size for reading frames (default: 1). |
 | `-ch`, `--chains` | Select specific two chains for analysis in heteromers (e.g., `'A,B'`). |
+| `--threshold` | Threshold percentage for dynamic interface residues (default: 50). |
 | `--foldx_path` | Path to the FoldX executable (required for energy analysis). |
 | `-sm`, `--split_models` | Splits multi-model PDBs into separate frames (default: True). |
 
