@@ -46,11 +46,15 @@ Before installing DynaPIN, please ensure you have the following:
 * **Version Control:** [Git](https://git-scm.com/) is recommended for cloning the repository.
 * **Python:** The package supports Python 3.10 and higher.
 
-## 🛠 External Dependencies
+## 🛠 External Dependencies (Optional but Recommended)
 
-While the conda environment handles most libraries, please note:
+The `dynapin` Conda environment automatically installs all core libraries. However, the energy calculation module relies on **FoldX**, which requires a separate, manual installation due to academic licensing restrictions.
 
-**FoldX:** Due to licensing, FoldX cannot be auto-installed. Download it from [FoldX Suite](https://foldxsuite.crg.eu/) and provide the path via `--foldx_path`.
+**How to use FoldX with DynaPIN:**
+1. Download the FoldX executable from the [FoldX Suite website](https://foldxsuite.crg.eu/).
+2. When executing DynaPIN, pass the path to this executable using the `--foldx_path` argument.
+
+> **Note:** FoldX is entirely optional. If you do not provide the `--foldx_path` argument, DynaPIN will still run perfectly, but it will automatically bypass the energy calculation module.
 
 ## 📦 Installation
 
