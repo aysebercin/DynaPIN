@@ -22,5 +22,5 @@ dependencies:
   - freesasa
   - nglview=3.1.4
   - pip:
-      - -e ./interfacea
+      - -e ./interfacea_src
       - -e .
