@@ -1,5 +1,7 @@
 import argparse
 import os
+import zipfile   
+import glob     
 from DynaPIN.Tables import dynapin
 from DynaPIN.Plots import Plotter
 import json
@@ -478,6 +480,28 @@ def main():
             print("\n")
         else:
             f2.close()
+
+        if not p_json:
+            draw._get_params_()
+            print_stars(1)
+            print("\n")
+            print("Plot parameters saved as plot_params.json")
+            print("\n")
+            print_stars(1)
+            print("\n")
+        else:
+            f2.close()
+
+    print("Compressing intermediate ensembles to save disk space...")
+    intermediate_pdbs = glob.glob(os.path.join(output_dir, "*.pdb"))
+    
+    if intermediate_pdbs:
+        zip_path = os.path.join(output_dir, "ensembles.zip")
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for pdb_file in intermediate_pdbs:
+                zipf.write(pdb_file, os.path.basename(pdb_file))
+                os.remove(pdb_file)
+        print(f"Successfully compressed into {os.path.basename(zip_path)}.\n")
 
 if __name__ == '__main__':
     main()
