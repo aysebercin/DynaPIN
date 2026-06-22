@@ -34,7 +34,7 @@ Map the specific atomic interaction networks over time.
 DynaPIN is built on object-oriented and modular Python architecture, integrating powerful libraries such as **MDAnalysis** and **pdb-tools** for trajectory handling, **FreeSASA** for surface calculations, **FoldX** for energy analysis, and **DSSP** for secondary structure analysis, and **Interfacea** for interaction profiling. Results are automatically organized into tabular data (`.csv`) and visual plots (`.png`).
 
 
-![DynaPIN Architecture](DynaPIN_Architechture.png)
+![DynaPIN Architecture](DynaPIN_Architecture.png)
 
 ## 💻 System Requirements
 
