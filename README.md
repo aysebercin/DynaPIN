@@ -162,19 +162,13 @@ DynaPIN is currently under peer review. If you use DynaPIN in your research, ple
 
 DynaPIN seamlessly integrates several powerful structural analysis tools and methodologies to perform comprehensive interface profiling. If you use DynaPIN in your research, we highly encourage you to consider citing the underlying software and definitions that make this pipeline possible:
 
-* **MDAnalysis:** Utilized for trajectory processing and core structural metrics (RMSD, RMSF, Rg).
-  > Michaud-Agrawal, N., et al. (2011). *Journal of Computational Chemistry*. [DOI: 10.1002/jcc.21787](https://doi.org/10.1002/jcc.21787)
-* **DockQ:** Integrated for frame-resolved CAPRI interface quality metrics (DockQ score, Fnat, i-RMSD, etc.).
-  > Basu, S., & Wallner, B. (2016). *PLOS ONE*. [DOI: 10.1371/journal.pone.0161879](https://doi.org/10.1371/journal.pone.0161879)
-* **FreeSASA & Levy's Interface Definition:** FreeSASA is used to compute accessible surface areas, classifying residues into core, rim, and support regions based on Levy's definition.
-  > Mitternacht, S. (2016). *F1000Research*. [DOI: 10.12688/f1000research.7931.1](https://doi.org/10.12688/f1000research.7931.1)
-  > Levy, E. D. (2010). *Journal of Molecular Biology*. [DOI: 10.1016/j.jmb.2010.09.028](https://doi.org/10.1016/j.jmb.2010.09.028)
-* **DSSP:** Used to monitor secondary structure transitions of dynamic interface residues.
-  > Hekkelman, M. L., et al. (2025). *Protein Science*. [DOI: 10.1002/pro.70208](https://doi.org/10.1002/pro.70208)
-* **FoldX:** Executed on a per-frame basis to calculate van der Waals and electrostatic energy contributions.
-  > Schymkowitz, J., et al. (2005). *Nucleic Acids Research*. [DOI: 10.1093/nar/gki387](https://doi.org/10.1093/nar/gki387)
-* **interfacea:** Extensively optimized and employed for atomistic profiling of hydrogen bonds, salt bridges, and hydrophobic contacts.
-  > Rodrigues, J., et al. (2019). *Zenodo*. [DOI: 10.5281/zenodo.3516439](https://doi.org/10.5281/zenodo.3516439)
+* **MDAnalysis:** Trajectory processing and core structural metrics. [[Michaud-Agrawal et al., 2011]](https://doi.org/10.1002/jcc.21787)
+* **pdb-tools:** Manipulation, cleaning, and preprocessing of PDB files. [[Rodrigues et al., 2018]](https://doi.org/10.12688/f1000research.17456.1)
+* **DockQ:** Frame-resolved CAPRI interface quality metrics. [[Basu & Wallner, 2016]](https://doi.org/10.1371/journal.pone.0161879)
+* **FreeSASA & Levy's Definition:** Computing accessible surface areas and mapping interface regions. [[Mitternacht, 2016]](https://doi.org/10.12688/f1000research.7931.1) / [[Levy, 2010]](https://doi.org/10.1016/j.jmb.2010.09.028)
+* **DSSP:** Monitoring secondary structure transitions. [[Hekkelman et al., 2025]](https://doi.org/10.1002/pro.70208)
+* **FoldX:** Calculating van der Waals and electrostatic energy contributions. [[Schymkowitz et al., 2005]](https://doi.org/10.1093/nar/gki387)
+* **interfacea:** Atomistic profiling of non-covalent interactions. [[Rodrigues et al., 2019]](https://doi.org/10.5281/zenodo.3516439)
   
 ## 📜 Acknowledgements & Funding
 
